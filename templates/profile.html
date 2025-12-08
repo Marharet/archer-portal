@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h2>👤 Профіль користувача</h2>
+        <hr class="border border-gray border-1 opacity-50">
+        
+        <div class="card shadow-sm p-4 hover">
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item">
+                    <strong>ПІБ:</strong> {{ current_user.fio }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Email (Логін):</strong> {{ current_user.email }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Роль у системі:</strong> <span class="badge bg-{{ 'danger' if current_user.role == 'Admin' else 'info' }}">{{ current_user.role }}</span>
+                </li>
+                <li class="list-group-item">
+                    <strong>Спортивний розряд:</strong> {{ current_user.rank or 'Не вказано' }}
+                </li>
+                <li class="list-group-item">
+                    <strong>Дата початку тренувань:</strong> {{ current_user.start_date.strftime('%Y-%m-%d') }}
+                </li>
+            </ul>
+        </div>
+        
+    </div>
+</div>
+{% endblock %}
