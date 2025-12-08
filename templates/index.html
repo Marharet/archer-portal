@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded-3">
+    <h1 class="display-5">Привіт, {{ current_user.fio }}!</h1>
+    <p class="lead">Ви успішно увійшли в систему як {{ current_user.role }}.</p>
+    <hr class="border border-gray border-1 opacity-50">
+    <p>Використовуйте навігаційне меню вище для управління системою.</p>
+</div>
+{% endblock %}
