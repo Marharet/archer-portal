@@ -79,7 +79,7 @@ def create_bow():
             
             new_bow = Bow(
                 name=request.form.get('name'),
-                athlete_id=current_user.id,
+                athlete_id=owner_id,
                 shoulders=request.form.get('shoulders'),
                 draw_weight=float(request.form.get('draw_weight')),
                 draw_length=float(request.form.get('draw_length')),

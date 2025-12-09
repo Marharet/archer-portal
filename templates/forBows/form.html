@@ -10,6 +10,22 @@
             <div class="card-body">
                 <form method="POST" action="">
                     
+                    {% if current_user.role == 'Admin' %}
+                    <div class="mb-3">
+                        <label for="athlete_id" class="form-label">Власник луку</label>
+                        <select class="form-select" id="athlete_id" name="athlete_id" required>
+                            <option value="" disabled {% if not bow %}selected{% endif %}>Оберіть власника</option>
+                            {% for athlete in athletes %}
+                            <option value="{{ athlete.id }}" 
+                                {% if (bow and bow.athlete_id == athlete.id) or (not bow and athlete.id == current_user.id) %}
+                                    selected
+                                {% endif %}>
+                                {{ athlete.fio }} ({{ athlete.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
 
                     <div class="mb-3">
                         <label for="name" class="form-label">Назва лука</label>
