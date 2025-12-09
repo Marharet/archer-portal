@@ -3,6 +3,7 @@ from flask import render_template, redirect, url_for, flash, request
 from models import Athlete, Bow
 from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash
+from functools import wraps
 
 # ----------------- ТИМЧАСОВИЙ МАРШРУТ ДЛЯ АДМІНА -----------------
 
@@ -23,7 +24,6 @@ def create_admin():
     
     flash('Адміністратор вже існує.', 'info')
     return redirect(url_for('index'))
-
 
 
 # ----------------- ЛОГІН ТА ЛОГАУТ -----------------
@@ -69,8 +69,14 @@ def my_bows():
 @app.route('/bow/create', methods=['GET', 'POST'])
 @login_required
 def create_bow():
+    athletes = None
+    if current_user.role == 'Admin':
+        athletes = db.session.scalars(db.select(Athlete)).all()
+        
     if request.method == 'POST':
         try:
+            owner_id = request.form.get('athlete_id') if current_user.role == 'Admin' else current_user.id
+            
             new_bow = Bow(
                 name=request.form.get('name'),
                 athlete_id=current_user.id,
@@ -82,13 +88,17 @@ def create_bow():
             db.session.add(new_bow)
             db.session.commit()
             flash(f'Лук "{new_bow.name}" успішно створений!', 'success')
+            
+            if current_user.role == 'Admin':
+                return redirect(url_for('all_bows'))
             return redirect(url_for('my_bows'))
+        
         except Exception as e:
             flash(f'Помилка створення луку: {e}', 'danger')
             db.session.rollback()
             
     MODELS = ['Hotr', 'WiaWis', 'WNS']
-    return render_template('forBows/form.html', title='Створити лук', models=MODELS, bow=None)
+    return render_template('forBows/form.html', title='Створити лук', models=MODELS, bow=None, athletes=athletes)
 
 # редагування луку
 @app.route('/bow/edit/<int:bow_id>', methods=['GET', 'POST'])
@@ -96,12 +106,19 @@ def create_bow():
 def edit_bow(bow_id):
     bow = db.session.get(Bow, bow_id)
     
-    if bow is None or bow.athlete_id != current_user.id:
+    if bow is None or (current_user.role == 'Athlete' and bow.athlete_id != current_user.id):
         flash('Доступ заборонено або лук не знайдено.', 'danger')
         return redirect(url_for('my_bows'))
+    
+    athletes = None
+    if current_user.role == 'Admin':
+        athletes = db.session.scalars(db.select(Athlete)).all()
 
     if request.method == 'POST':
         try:
+            if current_user.role == 'Admin':
+                bow.athlete_id = request.form.get('athlete_id')
+            
             bow.name = request.form.get('name')
             # athlete_id не змінюється
             bow.shoulders = request.form.get('shoulders')
@@ -111,13 +128,17 @@ def edit_bow(bow_id):
             
             db.session.commit()
             flash(f'Лук "{bow.name}" успішно оновлено!', 'success')
+            
+            if current_user.role == 'Admin':
+                return redirect(url_for('all_bows'))
             return redirect(url_for('my_bows'))
+        
         except Exception as e:
             flash(f'Помилка оновлення луку: {e}', 'danger')
             db.session.rollback()
             
     MODELS = ['Hotr', 'WiaWis', 'WNS']
-    return render_template('forBows/form.html', title='Редагувати Лук', models=MODELS, bow=bow)
+    return render_template('forBows/form.html', title='Редагувати лук', models=MODELS, bow=bow, athletes=athletes)
 
 # видалення луку
 @app.route('/bow/delete/<int:bow_id>', methods=['POST'])
@@ -125,13 +146,16 @@ def edit_bow(bow_id):
 def delete_bow(bow_id):
     bow = db.session.get(Bow, bow_id)
     
-    if bow is None or bow.athlete_id != current_user.id:
+    if bow is None or (current_user.role == 'Athlete' and bow.athlete_id != current_user.id):
         flash('Доступ заборонено або лук не знайдено.', 'danger')
         return redirect(url_for('my_bows'))
         
     db.session.delete(bow)
     db.session.commit()
     flash('Лук успішно видалено.', 'success')
+    
+    if current_user.role == 'Admin':
+        return redirect(url_for('all_bows'))
     return redirect(url_for('my_bows'))
 
 
@@ -141,6 +165,50 @@ def delete_bow(bow_id):
 @login_required
 def profile():
     return render_template('profile.html', title='Мій профіль')
+
+
+# ---------------- ТІЛЬКИ ДЛЯ АДМІНА -----------------
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'Admin':
+            flash('Доступ заборонено: потрібні права Адміна.', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# перегляд всіх луків усіх спортсменів
+@app.route('/admin/all_bows')
+@login_required
+@admin_required
+def all_bows():
+    bows = db.session.scalars(db.select(Bow)).all()
+    return render_template('forBows/list.html', title='Всі луки', bows=bows, owner_view=False)
+
+# перегляд всіх спортсменів
+@app.route('/admin/all_athletes')
+@login_required
+@admin_required
+def all_athletes():
+    athletes = db.session.scalars(db.select(Athlete)).all()
+    return render_template('all_athletes.html', title='Всі спортсмени', athletes=athletes)
+    
+# перегляд акаунту спорсмена
+@app.route('/admin/athlete/<int:athlete_id>')
+@login_required
+@admin_required
+def athlete_card(athlete_id):
+    athlete = db.session.get(Athlete, athlete_id)
+    if athlete is None:
+        flash('Спортсмена не знайдено.', 'danger')
+        return redirect(url_for('all_bows')) 
+
+    athlete_bows = db.session.scalars(
+        db.select(Bow).filter_by(athlete_id=athlete_id)
+    ).all()
+    
+    return render_template('profile.html', title=f'Профіль {athlete.fio}', athlete=athlete, bows=athlete_bows)
 
                 
 # ----------------- ГОЛОВНА СТОРІНКА -----------------

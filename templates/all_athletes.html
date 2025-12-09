@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ title }}</h2>
+        </div>
+
+    {% if not athletes %}
+    <div class="alert alert-info">
+        У системі немає зареєстрованих спортсменів.
+    </div>
+    {% else %}
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>ПІБ</th>
+                <th>Email</th>
+                <th>Роль</th>
+                <th>Розряд</th>
+                <th>Дата початку</th>
+                <th>Дії</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for athlete in athletes %}
+            <tr>
+                <td>{{ athlete.id }}</td>
+                <td>{{ athlete.fio }}</td>
+                <td>{{ athlete.email }}</td>
+                <td>
+                    <span class="badge bg-{{ 'danger' if athlete.role == 'Admin' else 'info' }}">
+                        {{ athlete.role }}
+                    </span>
+                </td>
+                <td>{{ athlete.rank}}</td>
+                <td>{{ athlete.start_date.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <a href="{{ url_for('athlete_card', athlete_id=athlete.id) }}" class="btn btn-sm btn-primary">
+                        Переглянути
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endblock %}
