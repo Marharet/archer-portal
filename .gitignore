@@ -5,5 +5,4 @@ __pycache__/
 # Database and secrets
 .env
 
-requirements.txt
 .vscode

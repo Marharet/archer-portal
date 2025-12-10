@@ -5,27 +5,6 @@ from flask_login import current_user, login_user, logout_user, login_required
 from werkzeug.security import generate_password_hash
 from functools import wraps
 
-# ----------------- ТИМЧАСОВИЙ МАРШРУТ ДЛЯ АДМІНА -----------------
-
-@app.route('/create_admin')
-def create_admin():
-    if db.session.get(Athlete, 1) is None: 
-        admin = Athlete(
-            email='admin@portal.com',
-            fio='Адміністратор cистеми',
-            rank='Майстер',
-            role='Admin'
-        )
-        admin.set_password('adminpassword') 
-        db.session.add(admin)
-        db.session.commit()
-        flash('Адміністратор створений: admin@portal.com / adminpassword', 'success')
-        return redirect(url_for('login'))
-    
-    flash('Адміністратор вже існує.', 'info')
-    return redirect(url_for('index'))
-
-
 # ----------------- ЛОГІН ТА ЛОГАУТ -----------------
 
 @app.route('/login', methods=['GET', 'POST'])
