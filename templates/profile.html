@@ -5,7 +5,7 @@
     <div class="col-md-8">
         {% set profile_user = athlete if athlete else current_user %}
 
-        <h3>👤 Профіль користувача</h3>
+        <h3>Профіль користувача</h3>
         <hr class="border border-gray border-1 opacity-50">
         
         <div class="card shadow-sm p-4 hover">
@@ -30,7 +30,7 @@
 
         {% if athlete and current_user.role == 'Admin' %}
             
-            <h3 class="mt-5 mb-3">🏹 Список луків {{profile_user.fio}}</h3>
+            <h3 class="mt-5 mb-3">Список луків {{profile_user.fio}}</h3>
             <hr class="border border-gray border-1 opacity-50">
         
             {% if not bows %}
@@ -46,7 +46,6 @@
                         <th>Назва</th>
                         <th>Модель</th>
                         <th>Сила натяга</th>
-                        {# <th>Дії</th> #}
                     </tr>
                 </thead>
                 <tbody>
